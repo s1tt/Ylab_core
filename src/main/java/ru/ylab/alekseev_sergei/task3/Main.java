@@ -1,6 +1,8 @@
 package ru.ylab.alekseev_sergei.task3;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -51,41 +53,11 @@ public class Main {
             new Person(7, "Amelia"),
             new Person(8, "Amelia"),
     };
-        /*  Raw data:
-
-        0 - Harry
-        0 - Harry
-        1 - Harry
-        2 - Harry
-        3 - Emily
-        4 - Jack
-        4 - Jack
-        5 - Amelia
-        5 - Amelia
-        6 - Amelia
-        7 - Amelia
-        8 - Amelia
-
-        **************************************************
-
-        Duplicate filtered, grouped by name, sorted by name and id:
-
-        Amelia:
-        1 - Amelia (5)
-        2 - Amelia (6)
-        3 - Amelia (7)
-        4 - Amelia (8)
-        Emily:
-        1 - Emily (3)
-        Harry:
-        1 - Harry (0)
-        2 - Harry (1)
-        3 - Harry (2)
-        Jack:
-        1 - Jack (4)
-     */
 
     public static void main(String[] args) {
+        int[] array = {3, 4, 2, 7};
+        int target = 10;
+
         System.out.println("Raw data:");
         System.out.println();
 
@@ -93,49 +65,84 @@ public class Main {
             System.out.println(person.id + " - " + person.name);
         }
 
-        System.out.println();
-        System.out.println("**************************************************");
-        System.out.println();
-        System.out.println("Duplicate filtered, grouped by name, sorted by name and id:");
-        System.out.println();
+        System.out.println("\n**************************************************");
+        System.out.println("Remove duplicates, sort by id, group by name:\n");
 
-        /*
-        Task1
-            Убрать дубликаты, отсортировать по идентификатору, сгруппировать по имени
+        newRowData(RAW_DATA);
 
-            Что должно получиться Key: Amelia
-                Value:4
-                Key: Emily
-                Value:1
-                Key: Harry
-                Value:3
-                Key: Jack
-                Value:1
-         */
+        System.out.println("\n**************************************************");
+        System.out.println("Sum of two:\n");
 
+        System.out.println(Arrays.toString(sumOfTwo(array, target)));
 
+        System.out.println("\n**************************************************");
+        System.out.println("Fuzzy search:\n");
 
-        /*
-        Task2
+        System.out.println(fuzzySearch("car", "ca6$$#_rtwheel")); // true
+        System.out.println(fuzzySearch("cwhl", "cartwheel")); // true
+        System.out.println(fuzzySearch("cwhee", "cartwheel")); // true
+        System.out.println(fuzzySearch("cartwheel", "cartwheel")); // true
+        System.out.println(fuzzySearch("cwheeel", "cartwheel")); // false
+        System.out.println(fuzzySearch("lw", "cartwheel")); // false
+    }
 
-            [3, 4, 2, 7], 10 -> [3, 7] - вывести пару менно в скобках, которые дают сумму - 10
-         */
+    private static void newRowData(Person[] data) {
+        Arrays.stream(data)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted(Comparator.comparing(Person::getName).thenComparing(Person::getId))
+                .collect(Collectors.groupingBy(Person::getName, LinkedHashMap::new, Collectors.counting()))
+                .forEach((key, value) -> System.out.println("Key: " + key + "\n Value: " + value));
+    }
 
+    //   O(n^2)
+//    private static int[] sumOfTwo(int[] array, int target) {
+//        int[] result = new int[2];
+//        if (Objects.nonNull(array)) {
+//            for (int i = 0; i < array.length; i++) {
+//                for (int j = i + 1; j < array.length; j++) {
+//                    if (array[i] + array[j] == target) {
+//                        result[0] = array[i];
+//                        result[1] = array[j];
+//                    }
+//                }
+//            }
+//        }
+//        return result;
+//    }
 
+    //  O(n)
+    private static int[] sumOfTwo(int[] array, int target) {
+        if (Objects.nonNull(array)) {
+            Map<Integer, Integer> map = new HashMap<>();
 
-        /*
-        Task3
-            Реализовать функцию нечеткого поиска
+            for (int i = 0; i < array.length; i++) {
+                map.put(array[i], i);
+            }
 
-                    fuzzySearch("car", "ca6$$#_rtwheel"); // true
-                    fuzzySearch("cwhl", "cartwheel"); // true
-                    fuzzySearch("cwhee", "cartwheel"); // true
-                    fuzzySearch("cartwheel", "cartwheel"); // true
-                    fuzzySearch("cwheeel", "cartwheel"); // false
-                    fuzzySearch("lw", "cartwheel"); // false
-         */
+            for (int i = 0; i < array.length; i++) {
+                int temp = target - array[i];
+                if (map.containsKey(temp) && map.get(temp) != i) {
+                    return new int[]{array[i], temp};
+                }
+            }
+        }
+        return new int[0];
+    }
 
+    private static boolean fuzzySearch(String target, String str) {
+        if (target.length() > str.length() || target.isBlank()) {
+            return false;
+        }
 
+        for (char ch : target.toCharArray()) {
+            int i = str.indexOf(ch);
+            if (i == -1) {
+                return false;
+            }
+            str = str.substring(str.indexOf(ch) + 1);
+        }
+        return true;
     }
 }
 
